@@ -1,0 +1,7 @@
+pandas
+numpy
+requests
+scikit-learn
+beautifulsoup4
+lxml
+tqdm
