@@ -141,6 +141,6 @@ def CheckDuplicateTickers(ticker_cik_df):
 
 
 tickers = GetTickers()
-cik_dict = MapTickerToCik(tickers)
+ticker_cik_df = MapTickerToCik(tickers)
 code.interact(local = locals())
 
