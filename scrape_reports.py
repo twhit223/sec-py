@@ -1,5 +1,6 @@
 import re
 import os
+import shutil
 from time import gmtime, strftime
 from datetime import datetime, timedelta
 import unicodedata
@@ -847,7 +848,7 @@ def ConvertHTML(cik):
   os.chdir('..')
   return
 
-def ConvertToText(cik):
+def ConvertToText(ticker_cik_df):
   
   '''
   Removes numerical tables, HTML tags,
@@ -855,8 +856,8 @@ def ConvertToText(cik):
   
   Parameters
   ----------
-  cik : str
-      Central Index Key used to scrape files.
+  ticker_cik_df : pandas df
+    dataframe containing cik, ticker, and sic code for all public companies
   
   Returns
   -------
@@ -885,8 +886,59 @@ def ConvertToText(cik):
     directory = cik + '_' + ticker
     ConvertHTML(directory)
 
+
+def AggregateRawText(pathname, ticker_cik_df):
+
+  '''
+  Finds all of the raw text files created by ConvertToText
+  and aggregates them into the single folder 'all_raw_text'
+  located under the pathname.
+  
+  Parameters
+  ----------
+  pathname : str
+    string containing the path to aggregate the text files from; should be s1, 10k, or 10q
+
+  ticker_cik_df : pandas df
+    dataframe containing cik, ticker, and sic code for all public companies
+  
+  Returns
+  -------
+  None.
+  
+  '''
+
+  # Set the destination folder
+  dest = os.path.join(pathname, 'all_raw_text')
+  
+  # print(dest)
+
+  # Iterate over the folders and gather the text files
+  for index, row in tqdm(ticker_cik_df[['cik','ticker']].iterrows()):
+    cik = str(row['cik'])
+    ticker = row['ticker']
+    directory = cik + '_' + ticker
+    
+    # Go into the raw text folder for the company and recursively copy all files
+    company_path = os.path.join(pathname, directory, 'rawtext')
+   
+    # print(company_path)
+    # code.interact(local = locals())
+
+    os.chdir(company_path)
+    file_list = [fname for fname in os.listdir() if not (fname.startswith('.') | os.path.isdir(fname))]
+    for file_name in file_list:
+      full_file_name = os.path.join(company_path, file_name)
+      if os.path.isfile(full_file_name):
+        shutil.copy(full_file_name, dest)
+
+
+
+
+
 # Run the code
 ticker_cik_df = GetTickerCikDf()
+
 
 # RunScrape10K(ticker_cik_df)
 # code.interact(local = locals())
@@ -894,7 +946,7 @@ ticker_cik_df = GetTickerCikDf()
 # code.interact(local=locals())
 # RunScrapeS1(ticker_cik_df)
 # code.interact(local = locals())
-ConvertToText(ticker_cik_df)
+# ConvertToText(ticker_cik_df)
 
-
+AggregateRawText(PATHNAME_S1, ticker_cik_df)
 
